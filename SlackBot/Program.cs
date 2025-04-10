@@ -17,7 +17,21 @@ builder.Services.AddHttpClient("SlackApiClient", (sp, client) => {
     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {slackBotToken}");
 });
 
-// Register SlackClient service
+// Register named HttpClient for Azure OpenAI API
+builder.Services.AddHttpClient("AzureOpenAIClient", (sp, client) => {
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    
+    var endpoint = configuration["AzureOpenAI:Endpoint"] ?? 
+        throw new InvalidOperationException("AzureOpenAI:Endpoint configuration is missing");
+    client.BaseAddress = new Uri(endpoint);
+    
+    var apiKey = configuration["AzureOpenAI:ApiKey"] ?? 
+        throw new InvalidOperationException("AzureOpenAI:ApiKey configuration is missing");
+    client.DefaultRequestHeaders.Add("api-key", apiKey);
+});
+
+// Register services
 builder.Services.AddSingleton<ISlackClient, SlackClient>();
+builder.Services.AddSingleton<IAOAIClient, AOAIClient>();
 
 builder.Build().Run();
