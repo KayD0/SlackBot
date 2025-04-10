@@ -10,24 +10,17 @@ namespace SlackBot.Clients
     /// </summary>
     public class SlackClient : ISlackClient
     {
-        private readonly string _slackBotToken;
-        private readonly HttpClient _httpClient;
+        private readonly HttpClient _slackApiClient;
+        private const string HttpClientName = "SlackApiClient";
 
         /// <summary>
         /// Initializes a new instance of the SlackService class
         /// </summary>
         /// <param name="slackBotToken">The Slack bot token to use for API calls</param>
-        /// <param name="httpClient">The HttpClient to use for API calls (optional)</param>
-        public SlackClient(string slackBotToken, HttpClient? httpClient = null)
+        /// <param name="httpClientFactory">The HttpClientFactory to create named clients</param>
+        public SlackClient(IHttpClientFactory httpClientFactory)
         {
-            _slackBotToken = slackBotToken ?? throw new ArgumentNullException(nameof(slackBotToken));
-            _httpClient = httpClient ?? new HttpClient();
-
-            // Set the Authorization header if it's not already set
-            if (!_httpClient.DefaultRequestHeaders.Contains("Authorization"))
-            {
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _slackBotToken);
-            }
+            _slackApiClient = httpClientFactory.CreateClient(HttpClientName);
         }
 
         /// <summary>
@@ -37,7 +30,7 @@ namespace SlackBot.Clients
         public async Task<List<Channel>> GetBotChannels()
         {
             // Call Slack API to get conversations list
-            var response = await _httpClient.GetAsync("https://slack.com/api/conversations.list?types=public_channel,private_channel&limit=1000");
+            var response = await _slackApiClient.GetAsync("https://slack.com/api/conversations.list?types=public_channel,private_channel&limit=1000");
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -88,7 +81,7 @@ namespace SlackBot.Clients
 
             // Call Slack API to get conversation history
             string url = $"https://slack.com/api/conversations.history?channel={channelId}&oldest={oldest}&latest={latest}&limit=1000";
-            var response = await _httpClient.GetAsync(url);
+            var response = await _slackApiClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -114,7 +107,7 @@ namespace SlackBot.Clients
         public async Task<List<SlackUser>> GetUserList()
         {
             // Call Slack API to get users list
-            var response = await _httpClient.GetAsync("https://slack.com/api/users.list");
+            var response = await _slackApiClient.GetAsync("https://slack.com/api/users.list");
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -151,7 +144,7 @@ namespace SlackBot.Clients
                 });
 
                 // Call Slack API to send message
-                var response = await _httpClient.PostAsync("https://slack.com/api/chat.postMessage", content);
+                var response = await _slackApiClient.PostAsync("https://slack.com/api/chat.postMessage", content);
                 response.EnsureSuccessStatusCode();
 
                 var responseContent = await response.Content.ReadAsStringAsync();
