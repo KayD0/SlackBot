@@ -3,36 +3,36 @@ using SlackBot.ResponseModel.SlackApi;
 namespace SlackBot.Clients.Interfaces
 {
     /// <summary>
-    /// Interface for interacting with the Slack API
+    /// Slack APIと対話するためのインターフェース
     /// </summary>
     public interface ISlackClient
     {
         /// <summary>
-        /// Retrieves all channels that the bot is a member of
+        /// ボットがメンバーになっているすべてのチャンネルを取得
         /// </summary>
-        /// <returns>List of channels</returns>
+        /// <returns>チャンネルのリスト</returns>
         Task<List<Channel>> GetBotChannels();
 
         /// <summary>
-        /// Retrieves chat history for a specific channel on a specific date
+        /// 特定のチャンネルの特定の日付のチャット履歴を取得
         /// </summary>
-        /// <param name="channelId">The ID of the channel</param>
-        /// <param name="date">The date to retrieve history for</param>
-        /// <returns>List of messages</returns>
+        /// <param name="channelId">チャンネルのID</param>
+        /// <param name="date">履歴を取得する日付</param>
+        /// <returns>メッセージのリスト</returns>
         Task<List<Message>> GetChannelHistory(string channelId, DateTime date);
 
         /// <summary>
-        /// Retrieves a list of all users in the Slack workspace
+        /// Slackワークスペース内のすべてのユーザーのリストを取得
         /// </summary>
-        /// <returns>List of Slack users</returns>
+        /// <returns>Slackユーザーのリスト</returns>
         Task<List<SlackUser>> GetUserList();
 
         /// <summary>
-        /// Sends a message to a specified channel
+        /// 指定されたチャンネルにメッセージを送信
         /// </summary>
-        /// <param name="channelId">The ID of the channel to send the message to</param>
-        /// <param name="message">The message text to send</param>
-        /// <returns>True if the message was sent successfully, false otherwise</returns>
+        /// <param name="channelId">メッセージを送信するチャンネルのID</param>
+        /// <param name="message">送信するメッセージテキスト</param>
+        /// <returns>メッセージが正常に送信された場合はtrue、それ以外の場合はfalse</returns>
         Task<bool> SendMessageToChannel(string channelId, string message);
     }
 }

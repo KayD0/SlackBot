@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace SlackBot.ResponseModel.SlackApi
 {
     /// <summary>
-    /// Response from the Slack conversations.history API
+    /// Slack conversations.history APIからのレスポンス
     /// </summary>
     public class ConversationHistoryResponse
     {

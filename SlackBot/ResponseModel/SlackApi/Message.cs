@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace SlackBot.ResponseModel.SlackApi
 {
     /// <summary>
-    /// Represents a Slack message
+    /// Slackメッセージを表す
     /// </summary>
     public class Message
     {

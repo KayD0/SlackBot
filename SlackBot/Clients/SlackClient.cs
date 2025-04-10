@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace SlackBot.Clients
 {
     /// <summary>
-    /// Service for interacting with the Slack API
+    /// Slack APIと対話するためのサービス
     /// </summary>
     public class SlackClient : ISlackClient
     {
@@ -14,22 +14,21 @@ namespace SlackBot.Clients
         private const string HttpClientName = "SlackApiClient";
 
         /// <summary>
-        /// Initializes a new instance of the SlackService class
+        /// SlackServiceクラスの新しいインスタンスを初期化します
         /// </summary>
-        /// <param name="slackBotToken">The Slack bot token to use for API calls</param>
-        /// <param name="httpClientFactory">The HttpClientFactory to create named clients</param>
+        /// <param name="httpClientFactory">名前付きクライアントを作成するためのHttpClientFactory</param>
         public SlackClient(IHttpClientFactory httpClientFactory)
         {
             _slackApiClient = httpClientFactory.CreateClient(HttpClientName);
         }
 
         /// <summary>
-        /// Retrieves all channels that the bot is a member of
+        /// ボットがメンバーになっているすべてのチャンネルを取得
         /// </summary>
-        /// <returns>List of channels</returns>
+        /// <returns>チャンネルのリスト</returns>
         public async Task<List<Channel>> GetBotChannels()
         {
-            // Call Slack API to get conversations list
+            // Slack APIを呼び出して会話リストを取得
             var response = await _slackApiClient.GetAsync("https://slack.com/api/conversations.list?types=public_channel,private_channel&limit=1000");
             response.EnsureSuccessStatusCode();
 
@@ -38,22 +37,22 @@ namespace SlackBot.Clients
 
             if (conversationsResponse == null)
             {
-                throw new Exception("Failed to deserialize Slack API response");
+                throw new Exception("Slack APIレスポンスのデシリアライズに失敗しました");
             }
 
             if (!conversationsResponse.Ok)
             {
-                throw new Exception($"Slack API error: {conversationsResponse.Error}");
+                throw new Exception($"Slack APIエラー: {conversationsResponse.Error}");
             }
 
-            // Filter to only include channels the bot is a member of
+            // ボットがメンバーになっているチャンネルのみをフィルタリング
             var botChannels = new List<Channel>();
 
             if (conversationsResponse.Channels != null)
             {
                 foreach (var channel in conversationsResponse.Channels)
                 {
-                    // Check if the bot is a member of this channel
+                    // ボットがこのチャンネルのメンバーかどうかを確認
                     if (channel.IsMember)
                     {
                         botChannels.Add(channel);
@@ -65,21 +64,21 @@ namespace SlackBot.Clients
         }
 
         /// <summary>
-        /// Retrieves chat history for a specific channel on a specific date
+        /// 特定のチャンネルの特定の日付のチャット履歴を取得
         /// </summary>
-        /// <param name="channelId">The ID of the channel</param>
-        /// <param name="date">The date to retrieve history for</param>
-        /// <returns>List of messages</returns>
+        /// <param name="channelId">チャンネルのID</param>
+        /// <param name="date">履歴を取得する日付</param>
+        /// <returns>メッセージのリスト</returns>
         public async Task<List<Message>> GetChannelHistory(string channelId, DateTime date)
         {
-            // Calculate Unix timestamps for the start and end of the day
+            // 日の始まりと終わりのUnixタイムスタンプを計算
             DateTime startOfDay = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Local);
             DateTime endOfDay = startOfDay.AddDays(1).AddSeconds(-1);
 
             double oldest = DateTimeToUnixTimestamp(startOfDay);
             double latest = DateTimeToUnixTimestamp(endOfDay);
 
-            // Call Slack API to get conversation history
+            // Slack APIを呼び出して会話履歴を取得
             string url = $"https://slack.com/api/conversations.history?channel={channelId}&oldest={oldest}&latest={latest}&limit=1000";
             var response = await _slackApiClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
@@ -89,24 +88,24 @@ namespace SlackBot.Clients
 
             if (historyResponse == null)
             {
-                throw new Exception("Failed to deserialize Slack API response");
+                throw new Exception("Slack APIレスポンスのデシリアライズに失敗しました");
             }
 
             if (!historyResponse.Ok)
             {
-                throw new Exception($"Slack API error: {historyResponse.Error}");
+                throw new Exception($"Slack APIエラー: {historyResponse.Error}");
             }
 
             return historyResponse.Messages ?? new List<Message>();
         }
 
         /// <summary>
-        /// Retrieves a list of all users in the Slack workspace
+        /// Slackワークスペース内のすべてのユーザーのリストを取得
         /// </summary>
-        /// <returns>List of Slack users</returns>
+        /// <returns>Slackユーザーのリスト</returns>
         public async Task<List<SlackUser>> GetUserList()
         {
-            // Call Slack API to get users list
+            // Slack APIを呼び出してユーザーリストを取得
             var response = await _slackApiClient.GetAsync("https://slack.com/api/users.list");
             response.EnsureSuccessStatusCode();
 
@@ -115,35 +114,35 @@ namespace SlackBot.Clients
 
             if (usersResponse == null)
             {
-                throw new Exception("Failed to deserialize Slack API response");
+                throw new Exception("Slack APIレスポンスのデシリアライズに失敗しました");
             }
 
             if (!usersResponse.Ok)
             {
-                throw new Exception($"Slack API error: {usersResponse.Error}");
+                throw new Exception($"Slack APIエラー: {usersResponse.Error}");
             }
 
             return usersResponse.Members ?? new List<SlackUser>();
         }
 
         /// <summary>
-        /// Sends a message to a specified channel
+        /// 指定されたチャンネルにメッセージを送信
         /// </summary>
-        /// <param name="channelId">The ID of the channel to send the message to</param>
-        /// <param name="message">The message text to send</param>
-        /// <returns>True if the message was sent successfully, false otherwise</returns>
+        /// <param name="channelId">メッセージを送信するチャンネルのID</param>
+        /// <param name="message">送信するメッセージテキスト</param>
+        /// <returns>メッセージが正常に送信された場合はtrue、それ以外の場合はfalse</returns>
         public async Task<bool> SendMessageToChannel(string channelId, string message)
         {
             try
             {
-                // Create the request content
+                // リクエストコンテンツを作成
                 var content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("channel", channelId),
                     new KeyValuePair<string, string>("text", message)
                 });
 
-                // Call Slack API to send message
+                // Slack APIを呼び出してメッセージを送信
                 var response = await _slackApiClient.PostAsync("https://slack.com/api/chat.postMessage", content);
                 response.EnsureSuccessStatusCode();
 
@@ -152,13 +151,13 @@ namespace SlackBot.Clients
 
                 if (postMessageResponse == null)
                 {
-                    Console.WriteLine("Failed to deserialize Slack API response");
+                    Console.WriteLine("Slack APIレスポンスのデシリアライズに失敗しました");
                     return false;
                 }
 
                 if (!postMessageResponse.Ok)
                 {
-                    Console.WriteLine($"Slack API error: {postMessageResponse.Error}");
+                    Console.WriteLine($"Slack APIエラー: {postMessageResponse.Error}");
                     return false;
                 }
 
@@ -166,13 +165,13 @@ namespace SlackBot.Clients
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error sending message: {ex.Message}");
+                Console.WriteLine($"メッセージ送信エラー: {ex.Message}");
                 return false;
             }
         }
 
         /// <summary>
-        /// Converts a DateTime to a Unix timestamp (seconds since epoch)
+        /// DateTimeをUnixタイムスタンプ（エポックからの秒数）に変換
         /// </summary>
         private static double DateTimeToUnixTimestamp(DateTime dateTime)
         {
@@ -181,7 +180,7 @@ namespace SlackBot.Clients
         }
 
         /// <summary>
-        /// Converts a Unix timestamp to a DateTime
+        /// UnixタイムスタンプをDateTimeに変換
         /// </summary>
         public static DateTime UnixTimestampToDateTime(string timestamp)
         {

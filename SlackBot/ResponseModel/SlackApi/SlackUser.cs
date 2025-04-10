@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace SlackBot.ResponseModel.SlackApi
 {
     /// <summary>
-    /// Represents a Slack user
+    /// Slackユーザーを表す
     /// </summary>
     public class SlackUser
     {
@@ -27,7 +27,7 @@ namespace SlackBot.ResponseModel.SlackApi
     }
 
     /// <summary>
-    /// Represents a Slack user profile
+    /// Slackユーザープロフィールを表す
     /// </summary>
     public class UserProfile
     {

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace SlackBot.ResponseModel.SlackApi
 {
     /// <summary>
-    /// Represents a Slack channel
+    /// Slackチャンネルを表す
     /// </summary>
     public class Channel
     {
@@ -21,7 +21,7 @@ namespace SlackBot.ResponseModel.SlackApi
     }
 
     /// <summary>
-    /// Represents a Slack channel topic
+    /// Slackチャンネルのトピックを表す
     /// </summary>
     public class Topic
     {

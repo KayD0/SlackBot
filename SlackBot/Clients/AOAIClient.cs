@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace SlackBot.Clients
 {
     /// <summary>
-    /// Service for interacting with the Azure OpenAI API
+    /// Azure OpenAI APIと対話するためのサービス
     /// </summary>
     public class AOAIClient : IAOAIClient
     {
@@ -21,38 +21,38 @@ namespace SlackBot.Clients
         private const string HttpClientName = "AzureOpenAIClient";
 
         /// <summary>
-        /// Initializes a new instance of the AOAIClient class
+        /// AOAIClientクラスの新しいインスタンスを初期化します
         /// </summary>
-        /// <param name="httpClientFactory">The HTTP client factory</param>
-        /// <param name="configuration">The configuration containing Azure OpenAI settings</param>
+        /// <param name="httpClientFactory">HTTPクライアントファクトリ</param>
+        /// <param name="configuration">Azure OpenAI設定を含む構成</param>
         public AOAIClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClient = httpClientFactory.CreateClient(HttpClientName);
             
             _deploymentName = configuration["AzureOpenAI:DeploymentName"] ?? 
-                throw new InvalidOperationException("AzureOpenAI:DeploymentName configuration is missing");
+                throw new InvalidOperationException("AzureOpenAI:DeploymentName設定がありません");
             
             _apiVersion = configuration["AzureOpenAI:ApiVersion"] ?? "2023-05-15";
         }
 
         /// <summary>
-        /// Sends a chat request to Azure OpenAI service
+        /// Azure OpenAIサービスにチャットリクエストを送信します
         /// </summary>
-        /// <param name="prompt">The user's message/prompt</param>
-        /// <returns>The AI response text</returns>
+        /// <param name="prompt">ユーザーのメッセージ/プロンプト</param>
+        /// <returns>AI応答テキスト</returns>
         public async Task<string> SendChatRequestAsync(string prompt)
         {
             try
             {
-                // Create the request URL (BaseAddress is already set in the HttpClient)
+                // リクエストURLを作成（BaseAddressはHttpClientで既に設定済み）
                 string requestUrl = $"openai/deployments/{_deploymentName}/chat/completions?api-version={_apiVersion}";
                 
-                // Create the request body
+                // リクエスト本文を作成
                 var requestBody = new
                 {
                     messages = new[]
                     {
-                        new { role = "system", content = "You are a helpful assistant." },
+                        new { role = "system", content = "あなたは役立つアシスタントです。" },
                         new { role = "user", content = prompt }
                     },
                     max_tokens = 800,
@@ -60,33 +60,33 @@ namespace SlackBot.Clients
                     top_p = 0.95
                 };
                 
-                // Serialize the request body to JSON
+                // リクエスト本文をJSONにシリアライズ
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 
-                // Send the request to Azure OpenAI
+                // Azure OpenAIにリクエストを送信
                 var response = await _httpClient.PostAsync(requestUrl, content);
                 response.EnsureSuccessStatusCode();
                 
-                // Parse the response
+                // レスポンスを解析
                 var responseContent = await response.Content.ReadAsStringAsync();
                 var responseObject = JsonSerializer.Deserialize<JsonElement>(responseContent);
                 
-                // Extract and return the response content
+                // レスポンス内容を抽出して返す
                 if (responseObject.TryGetProperty("choices", out var choices) && 
                     choices.GetArrayLength() > 0 && 
                     choices[0].TryGetProperty("message", out var message) && 
                     message.TryGetProperty("content", out var messageContent))
                 {
-                    return messageContent.GetString() ?? "No response generated.";
+                    return messageContent.GetString() ?? "応答が生成されませんでした。";
                 }
                 
-                return "No response generated.";
+                return "応答が生成されませんでした。";
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error calling Azure OpenAI: {ex.Message}");
-                return $"Error: {ex.Message}";
+                Console.WriteLine($"Azure OpenAI呼び出しエラー: {ex.Message}");
+                return $"エラー: {ex.Message}";
             }
         }
     }

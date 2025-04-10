@@ -1,15 +1,15 @@
 namespace SlackBot.Clients.Interfaces
 {
     /// <summary>
-    /// Interface for interacting with the Azure OpenAI API
+    /// Azure OpenAI APIと対話するためのインターフェース
     /// </summary>
     public interface IAOAIClient
     {
         /// <summary>
-        /// Sends a chat request to Azure OpenAI service
+        /// Azure OpenAIサービスにチャットリクエストを送信します
         /// </summary>
-        /// <param name="prompt">The user's message/prompt</param>
-        /// <returns>The AI response text</returns>
+        /// <param name="prompt">ユーザーのメッセージ/プロンプト</param>
+        /// <returns>AI応答テキスト</returns>
         Task<string> SendChatRequestAsync(string prompt);
     }
 }

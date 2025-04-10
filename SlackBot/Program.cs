@@ -9,7 +9,7 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
-// Register named HttpClient for Slack API
+// Slack API用の名前付きHttpClientを登録
 builder.Services.AddHttpClient("SlackApiClient", (sp, client) => {
     var configuration = sp.GetRequiredService<IConfiguration>();
     var slackBotToken = configuration["SlackBotToken"] ?? 
@@ -17,7 +17,7 @@ builder.Services.AddHttpClient("SlackApiClient", (sp, client) => {
     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {slackBotToken}");
 });
 
-// Register named HttpClient for Azure OpenAI API
+// Azure OpenAI API用の名前付きHttpClientを登録
 builder.Services.AddHttpClient("AzureOpenAIClient", (sp, client) => {
     var configuration = sp.GetRequiredService<IConfiguration>();
     
@@ -30,7 +30,7 @@ builder.Services.AddHttpClient("AzureOpenAIClient", (sp, client) => {
     client.DefaultRequestHeaders.Add("api-key", apiKey);
 });
 
-// Register services
+// サービスを登録
 builder.Services.AddSingleton<ISlackClient, SlackClient>();
 builder.Services.AddSingleton<IAOAIClient, AOAIClient>();
 

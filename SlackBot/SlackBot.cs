@@ -28,12 +28,12 @@ namespace SlackBot
 
             try
             {
-                // 1. Get all channels the bot is a member of
+                // 1. ボットがメンバーになっているすべてのチャンネルを取得
                 _logger.LogInformation("Getting bot channels...");
                 List<Channel> channels = await _slackClient.GetBotChannels();
                 _logger.LogInformation($"Found {channels.Count} channels");
 
-                // Process each channel
+                // 各チャンネルを処理
                 foreach (var channel in channels)
                 {
                     if (channel.Id == null)
@@ -44,17 +44,17 @@ namespace SlackBot
 
                     _logger.LogInformation($"Processing channel: {channel.Name} (ID: {channel.Id})");
 
-                    // 2. Get today's messages from the channel
+                    // 2. チャンネルから今日のメッセージを取得
                     var today = DateTime.Today;
                     var messages = await _slackClient.GetChannelHistory(channel.Id, today);
                     _logger.LogInformation($"Retrieved {messages.Count} messages from channel {channel.Name} for {today:yyyy-MM-dd}");
 
                     if (messages.Count > 0)
                     {
-                        // 3. Process messages (for example, create a summary)
+                        // 3. メッセージを処理（例：要約を作成）
                         string summary = CreateMessageSummary(messages);
                         
-                        // 4. Send the summary back to the channel
+                        // 4. 要約をチャンネルに送信
                         bool sent = await _slackClient.SendMessageToChannel(channel.Id, summary);
                         if (sent)
                         {
@@ -78,13 +78,13 @@ namespace SlackBot
         }
 
         /// <summary>
-        /// Creates a summary of messages
+        /// メッセージの要約を作成
         /// </summary>
-        /// <param name="messages">The messages to summarize</param>
-        /// <returns>A summary message</returns>
+        /// <param name="messages">要約するメッセージ</param>
+        /// <returns>要約メッセージ</returns>
         private string CreateMessageSummary(List<Message> messages)
         {
-            // This is a simple example - you could implement more sophisticated summarization logic
+            // これは単純な例 - より高度な要約ロジックを実装することも可能
             int messageCount = messages.Count;
             int userCount = messages.Select(m => m.User).Distinct().Count();
             
@@ -94,7 +94,7 @@ namespace SlackBot
             summary.AppendLine($"Active users: {userCount}");
             summary.AppendLine();
             
-            // Add a few recent messages as examples
+            // 例として最近のメッセージをいくつか追加
             var recentMessages = messages.OrderByDescending(m => m.Ts).Take(3);
             if (recentMessages.Any())
             {
@@ -113,7 +113,7 @@ namespace SlackBot
         }
 
         /// <summary>
-        /// Converts a Unix timestamp to a DateTime
+        /// UnixタイムスタンプをDateTimeに変換
         /// </summary>
         private static DateTime UnixTimestampToDateTime(string timestamp)
         {
