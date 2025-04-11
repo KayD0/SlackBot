@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using SlackBot.Clients.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -10,33 +9,42 @@ using System.Threading.Tasks;
 namespace SlackBot.Clients
 {
     /// <summary>
-    /// Azure OpenAI APIと対話するためのサービス
+    /// LM Studioと対話するためのサービス
     /// </summary>
-    public class AOAIClient : IAOAIClient
+    public class LMClient : ILMClient
     {
         private readonly HttpClient _httpClient;
-        private readonly string _deploymentName;
-        private readonly string _apiVersion;
+        private readonly string _baseUrl;
+        private readonly string _model;
 
-        private const string HttpClientName = "AzureOpenAIClient";
+        private const string HttpClientName = "LMStudioClient";
 
         /// <summary>
-        /// AOAIClientクラスの新しいインスタンスを初期化します
+        /// LMClientクラスの新しいインスタンスを初期化します
         /// </summary>
         /// <param name="httpClientFactory">HTTPクライアントファクトリ</param>
-        /// <param name="configuration">Azure OpenAI設定を含む構成</param>
-        public AOAIClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        /// <param name="configuration">LM Studio設定を含む構成</param>
+        public LMClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClient = httpClientFactory.CreateClient(HttpClientName);
             
-            _deploymentName = configuration["AzureOpenAIDeploymentName"] ?? 
-                throw new InvalidOperationException("AzureOpenAI:DeploymentName設定がありません");
+            _baseUrl = configuration["LMStudioBaseUrl"] ?? 
+                throw new InvalidOperationException("LMStudio:BaseUrl設定がありません");
             
-            _apiVersion = configuration["AzureOpenAIApiVersion"] ?? "2023-05-15";
+            _model = configuration["LMStudioModel"] ?? "default";
+            
+            // BaseURLが設定されていない場合はデフォルト値を使用
+            if (string.IsNullOrEmpty(_baseUrl))
+            {
+                _baseUrl = "http://localhost:1234/v1";
+            }
+            
+            // HttpClientのBaseAddressを設定
+            _httpClient.BaseAddress = new Uri(_baseUrl);
         }
 
         /// <summary>
-        /// Azure OpenAIサービスにチャットリクエストを送信します
+        /// LM Studioにチャットリクエストを送信します
         /// </summary>
         /// <param name="prompt">ユーザーのメッセージ/プロンプト</param>
         /// <returns>AI応答テキスト</returns>
@@ -44,12 +52,13 @@ namespace SlackBot.Clients
         {
             try
             {
-                // リクエストURLを作成（BaseAddressはHttpClientで既に設定済み）
-                string requestUrl = $"openai/deployments/{_deploymentName}/chat/completions?api-version={_apiVersion}";
+                // リクエストURLを作成
+                string requestUrl = "chat/completions";
                 
                 // リクエスト本文を作成
                 var requestBody = new
                 {
+                    model = _model,
                     messages = new[]
                     {
                         new { role = "system", content = "あなたは役立つアシスタントです。" },
@@ -64,7 +73,7 @@ namespace SlackBot.Clients
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 
-                // Azure OpenAIにリクエストを送信
+                // LM Studioにリクエストを送信
                 var response = await _httpClient.PostAsync(requestUrl, content);
                 response.EnsureSuccessStatusCode();
                 
@@ -85,7 +94,7 @@ namespace SlackBot.Clients
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Azure OpenAI呼び出しエラー: {ex.Message}");
+                Console.WriteLine($"LM Studio呼び出しエラー: {ex.Message}");
                 return $"エラー: {ex.Message}";
             }
         }

@@ -30,8 +30,14 @@ builder.Services.AddHttpClient("AzureOpenAIClient", (sp, client) => {
     client.DefaultRequestHeaders.Add("api-key", apiKey);
 });
 
+// LM Studio API用の名前付きHttpClientを登録
+builder.Services.AddHttpClient("LMStudioClient", (sp, client) => {
+    // LM Studioは通常認証が不要なので、BaseAddressはLMClientで設定します
+});
+
 // サービスを登録
 builder.Services.AddSingleton<ISlackClient, SlackClient>();
 builder.Services.AddSingleton<IAOAIClient, AOAIClient>();
+builder.Services.AddSingleton<ILMClient, LMClient>();
 
 builder.Build().Run();
