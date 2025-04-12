@@ -21,11 +21,11 @@ builder.Services.AddHttpClient("SlackApiClient", (sp, client) => {
 builder.Services.AddHttpClient("AzureOpenAIClient", (sp, client) => {
     var configuration = sp.GetRequiredService<IConfiguration>();
     
-    var endpoint = configuration["AzureOpenAI:Endpoint"] ?? 
+    var endpoint = configuration["AzureOpenAIEndpoint"] ?? 
         throw new InvalidOperationException("AzureOpenAI:Endpoint configuration is missing");
     client.BaseAddress = new Uri(endpoint);
     
-    var apiKey = configuration["AzureOpenAI:ApiKey"] ?? 
+    var apiKey = configuration["AzureOpenAIApiKey"] ?? 
         throw new InvalidOperationException("AzureOpenAI:ApiKey configuration is missing");
     client.DefaultRequestHeaders.Add("api-key", apiKey);
 });

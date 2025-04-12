@@ -3,11 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SlackBot.Clients.Interfaces;
 using SlackBot.ResponseModel.SlackApi;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SlackBot
 {
@@ -34,8 +30,6 @@ namespace SlackBot
         [Function("DiarySummury")]
         public async Task DiarySummury([TimerTrigger("0 */5 * * * *", RunOnStartup = true)] TimerInfo myTimer)
         {
-            _logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
-            
             if (myTimer.ScheduleStatus is not null)
             {
                 _logger.LogInformation($"Next timer schedule at: {myTimer.ScheduleStatus.Next}");
@@ -44,46 +38,38 @@ namespace SlackBot
             try
             {
                 // 1. ボットがメンバーになっているすべてのチャンネルを取得
-                _logger.LogInformation("Getting bot channels...");
                 List<Channel> channels = await _slackClient.GetBotChannels();
-                _logger.LogInformation($"Found {channels.Count} channels");
-
-                // 各チャンネルを処理
+                List<SlackUser> users = await _slackClient.GetUserList();
                 foreach (var channel in channels)
                 {
                     if (channel.Id == null)
                     {
-                        _logger.LogWarning("Skipping channel with null ID");
                         continue;
                     }
-
-                    _logger.LogInformation($"Processing channel: {channel.Name} (ID: {channel.Id})");
 
                     // 2. チャンネルから今日のメッセージを取得
                     var today = DateTime.Today;
                     var messages = await _slackClient.GetChannelHistory(channel.Id, today);
-                    _logger.LogInformation($"Retrieved {messages.Count} messages from channel {channel.Name} for {today:yyyy-MM-dd}");
+                    if (messages.Count == 0)
+                    {
+                        continue;
+                    }
 
-                    if (messages.Count > 0)
+                    // 3. チャネルメッセージのIDから表示名をマップ
+                    messages.ForEach(msg =>
                     {
-                        // 3. メッセージを処理（例：要約を作成）
-                        string summary = await CreateMessageSummary(messages);
+                        var match = users.FirstOrDefault(usr => msg.User == usr.Id);
+                        if (match != null)
+                        {
+                            msg.UserDisplayName = match.Name;
+                        }
+                    });
+
+                    // 4. メッセージを処理（例：要約を作成）
+                    string summary = await CreateMessageSummary(messages);
                         
-                        // 4. 要約をチャンネルに送信
-                        bool sent = await _slackClient.SendMessageToChannel(channel.Id, summary);
-                        if (sent)
-                        {
-                            _logger.LogInformation($"Successfully sent summary to channel {channel.Name}");
-                        }
-                        else
-                        {
-                            _logger.LogError($"Failed to send summary to channel {channel.Name}");
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"No messages found in channel {channel.Name} for {today:yyyy-MM-dd}");
-                    }
+                    // 5. 要約をチャンネルに送信
+                    bool sent = await _slackClient.SendMessageToChannel(channel.Id, summary);
                 }
             }
             catch (Exception ex)
@@ -112,24 +98,23 @@ namespace SlackBot
                             ? UnixTimestampToDateTime(message.Ts).ToString("HH:mm:ss")
                             : "unknown time";
                         
-                        messagesText.AppendLine($"[{timestamp}] User {message.User}: {message.Text}");
+                        messagesText.AppendLine($"[{timestamp}] User {message.UserDisplayName}: {message.Text}");
                     }
                     
                     // プロンプトを作成
-                    string prompt = $"以下はSlackチャンネルの今日のメッセージです。これらのメッセージの要約を作成してください。" +
-                                   $"要約は簡潔で、主要な話題やポイントを含め、Slack形式（マークダウン）で整形してください。\n\n" +
-                                   $"{messagesText}";
+                    string prompt = 
+                        $"以下はSlackチャンネルの今日のメッセージです。これらのメッセージの要約を作成してください。" +
+                        $"要約は簡潔で、主要な話題やポイントを含め、Slack形式（マークダウン）で整形してください。\n\n" +
+                        $"{messagesText}";
                     
                     // 設定に基づいてAIサービスを選択
                     string aiResponse;
                     if (_useLMStudio)
                     {
-                        _logger.LogInformation("Using LM Studio for summary generation");
                         aiResponse = await _lmClient.SendChatRequestAsync(prompt);
                     }
                     else
                     {
-                        _logger.LogInformation("Using Azure OpenAI for summary generation");
                         aiResponse = await _aoaiClient.SendChatRequestAsync(prompt);
                     }
                     

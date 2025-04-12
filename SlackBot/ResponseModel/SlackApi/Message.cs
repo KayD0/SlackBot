@@ -13,6 +13,8 @@ namespace SlackBot.ResponseModel.SlackApi
         [JsonPropertyName("user")]
         public string? User { get; set; }
 
+        public string? UserDisplayName { get; set; }
+
         [JsonPropertyName("text")]
         public string? Text { get; set; }
 

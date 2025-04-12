@@ -33,7 +33,7 @@ namespace SlackBot.Clients
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var conversationsResponse = JsonSerializer.Deserialize<ConversationsListResponse>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var conversationsResponse = JsonSerializer.Deserialize<ConversationsList>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (conversationsResponse == null)
             {
@@ -84,7 +84,7 @@ namespace SlackBot.Clients
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var historyResponse = JsonSerializer.Deserialize<ConversationHistoryResponse>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var historyResponse = JsonSerializer.Deserialize<ConversationHistory>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (historyResponse == null)
             {
@@ -96,6 +96,8 @@ namespace SlackBot.Clients
                 throw new Exception($"Slack APIエラー: {historyResponse.Error}");
             }
 
+            // ボット自身のメッセージは削除する
+            // historyResponse.Messages?.RemoveAll(x => x.User == "");
             return historyResponse.Messages ?? new List<Message>();
         }
 
@@ -110,7 +112,7 @@ namespace SlackBot.Clients
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var usersResponse = JsonSerializer.Deserialize<UsersListResponse>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var usersResponse = JsonSerializer.Deserialize<UsersList>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (usersResponse == null)
             {
@@ -147,7 +149,7 @@ namespace SlackBot.Clients
                 response.EnsureSuccessStatusCode();
 
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var postMessageResponse = JsonSerializer.Deserialize<SlackApiResponse>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var postMessageResponse = JsonSerializer.Deserialize<ChatPostMessage>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (postMessageResponse == null)
                 {

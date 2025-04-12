@@ -53,7 +53,7 @@ namespace SlackBot.Clients
             try
             {
                 // リクエストURLを作成
-                string requestUrl = "chat/completions";
+                string requestUrl = "http://localhost:1234/v1/chat/completions";
                 
                 // リクエスト本文を作成
                 var requestBody = new

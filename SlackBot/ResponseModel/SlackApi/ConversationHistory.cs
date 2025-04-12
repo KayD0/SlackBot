@@ -4,15 +4,18 @@ using System.Text.Json.Serialization;
 namespace SlackBot.ResponseModel.SlackApi
 {
     /// <summary>
-    /// Slack conversations.list APIからのレスポンス
+    /// Slack conversations.history APIからのレスポンス
     /// </summary>
-    public class ConversationsListResponse
+    public class ConversationHistory
     {
         [JsonPropertyName("ok")]
         public bool Ok { get; set; }
 
-        [JsonPropertyName("channels")]
-        public List<Channel>? Channels { get; set; } = new List<Channel>();
+        [JsonPropertyName("messages")]
+        public List<Message>? Messages { get; set; } = new List<Message>();
+
+        [JsonPropertyName("has_more")]
+        public bool HasMore { get; set; }
 
         [JsonPropertyName("error")]
         public string? Error { get; set; }

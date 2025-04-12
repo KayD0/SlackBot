@@ -5,7 +5,7 @@ namespace SlackBot.ResponseModel.SlackApi
     /// <summary>
     /// Slack APIからの一般的なレスポンス
     /// </summary>
-    public class SlackApiResponse
+    public class ChatPostMessage
     {
         [JsonPropertyName("ok")]
         public bool Ok { get; set; }
